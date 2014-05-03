@@ -1,0 +1,66 @@
+%!PS-Adobe-2.0
+%%Title: Hexes -- Draws Hexagonal Grid Paper
+%%Creator: Gaylon R Lovelace 
+%%CreationDate: 18 Dec 2003
+%%EndComments
+
+% The basic 'unit' of measure is the length of a hexagon's side.
+/inch {72 mul} def
+/unit {1 3 div mul inch} def
+
+% How many hexagons to draw...
+/nx {10} def
+/ny {20} def
+
+0.02 setlinewidth
+
+% The obvious solution would be to write a function which draws
+% one hexagon, and and call it repeatedly.
+% But every side is shared between two hexagons, so that
+% approach would draw every line segment twice.
+% So, the basic building block here is six line segments
+% which form half of two hexagons:
+%         \      /
+%          \____/
+%   \      /
+%    \____/
+% This block can be tiled in a strictly rectangular array,
+% with no overlapping lines.
+
+/basicstep {
+	-60 rotate
+	1 unit 0 unit rlineto
+	60 rotate
+	1 unit 0 unit rlineto
+	60 rotate
+	1 unit 0 unit rlineto
+	60 rotate
+	1 unit 0 unit rlineto
+	-1 unit 0 unit rmoveto
+	-120 rotate
+	1 unit 0 unit rlineto
+	60 rotate
+	1 unit 0 unit rlineto
+	-1 unit 0 unit rmoveto
+	-60 rotate
+} def
+
+0 1 ny 1 sub {
+	% Draw a row containing nx basic blocks.
+	newpath
+	% Start the row one unit off the left edge of the paper,
+	% to avoid dangling fractional hexagons.
+	% Each row begins sqrt(3) units about the previous row.
+	3 sqrt mul unit   % y-coord for start of row (fctn of row-index)
+	-1 unit           % x-coord for start of row
+	exch  moveto
+	1 1 nx {
+		pop   % Discard the x-axis for-loop index.
+		basicstep
+	} for
+	stroke
+} for
+
+
+showpage
+
