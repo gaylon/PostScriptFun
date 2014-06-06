@@ -8,21 +8,33 @@
 /inch {72 mul} def
 /nrows {12} def
 /ncols {7} def
-/xss {0.45 inch} def
-/xee {7.25 inch} def
-/yss {0.60 inch} def
-/yee {9.00 inch} def
- 
+/xss {0.50 inch} def
+/xee {7.97 inch} def
+/yss {0.30 inch} def
+/yee {10.5 inch} def
+/xunit {xee xss sub ncols div mul} def
+/yunit {yee yss sub nrows div mul} def
 
+% For this task, it's more natural to work in coords starting @ upper-left, 
+% but PS starts lower-left.  Scale y-axis by -1, and translate to change 
+% coordinate system.   
+1 -1 scale
+0 inch -11 inch translate
 
+% Unfortunately, the coord-change results in all text being upside-down. 
+% Define UpsideDownShow, for use with text items. 
+/usdshow {1 -1 scale show 1 -1 scale} def
 
-/unit {1 4 div mul inch} def
+/Helvetica findfont 15 scalefont setfont
 
-% How many triangles to fill the page...
-/nx {35} def
-/ny {26} def
+/fineline {0.2 setlinewidth} def 
+/fatline {2.8 setlinewidth} def 
 
-0.02 setlinewidth
+fineline
+newpath
+0 0 moveto
+%1 xunit 1 yunit rlineto
+xss yss rmoveto
 
 % The basic tiling block is: 
 %     __________
@@ -35,38 +47,50 @@
 % the right side, to close those edges.
 
 /basicstep {
-	60 rotate
-	1 unit 0 unit rlineto
-	-120 rotate
-	1 unit 0 unit rlineto
-	60 rotate
-	-1 unit 0 unit rlineto
-	-60 rotate
-	1 unit 0 unit rlineto
-	60 rotate
-	1 unit 0 unit rlineto
-	-1 unit 0 unit rmoveto
-	60 rotate
-	1 unit 0 unit rlineto
-	-60 rotate
+    1 xunit 0 yunit rlineto
+    -1 xunit 0 yunit rmoveto
+    0 xunit 1 yunit rlineto
+    0.70 xunit -0.1 yunit rmoveto
+    %(30) usdshow
 } def
 
-0 1 ny 1 sub {
-	% Draw a row containing nx basic blocks.
-	newpath
-	% Start the row one unit off the left edge of the paper,
-	% to avoid dangling fractional triangles.
-	% Each row begins sqrt(3) units about the previous row.
-	3 sqrt mul unit   % y-coord for start of row (fctn of row-index)
-	-1 unit           % x-coord for start of row
-	exch  moveto
-	1 1 nx {
-		pop   % Discard the x-axis for-loop index.
-		basicstep
-	} for
-	stroke
+1 1 nrows {
+    pop   % Discard the for-loop index.
+    currentpoint
+    1 1 ncols {
+        pop   % Discard the for-loop index.
+        currentpoint
+        basicstep
+        moveto
+        1 xunit 0 yunit rmoveto
+        %0.25 xunit 0.1 yunit rmoveto
+    } for
+    moveto
+    0 xunit 1 yunit rmoveto
 } for
+
+xss yee moveto
+xee yee lineto
+xee yss lineto
+-2 xunit 0 rmoveto
+currentpoint
+stroke 
+
+fatline
+newpath
+moveto 
+0 nrows yunit rlineto
+
+%stroke
+%
+%newpath
+%fatline
+%currentpoint pop yee lineto 
+%fineline
+stroke
 
 
 showpage
+
+
 
