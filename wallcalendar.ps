@@ -4,14 +4,21 @@
 %%CreationDate: 04 May 2014
 %%EndComments
 
-% The basic 'unit' of measure is the length of a triangle's side.
-/inch {72 mul} def
+% Define the date-month-year for this page to begin
+/currdate     2  def
+/currmonth    6  def
+/curryear  2014  def
+
+% Number of weeks per page
 /nrows {12} def
 /ncols {7} def
-/xss {0.50 inch} def
-/xee {7.97 inch} def
-/yss {0.30 inch} def
-/yee {10.5 inch} def
+
+% Basic units of layout.
+/inch {72 mul} def
+/xss {0.50 inch} def  % Left Margin
+/xee {7.97 inch} def  % Right Margin 
+/yss {0.30 inch} def  % Top Margin      
+/yee {10.5 inch} def  % Bottom Margin     
 /xunit {xee xss sub ncols div mul} def
 /yunit {yee yss sub nrows div mul} def
 
@@ -25,9 +32,28 @@
 % Define UpsideDownShow, for use with text items. 
 /usdshow {1 -1 scale show 1 -1 scale} def
 
-/Helvetica findfont 15 scalefont setfont
+/monthnames [(January) (February) (March) (April) (May) (June) 
+(July) (August) (September) (October) (November) (December)]   def 
+/monthlengths [31 28 31 30 31 30 31 31 30 31 30 31] def
 
-/fineline {0.2 setlinewidth} def 
+/incrMonth {
+    /currmonth currmonth 1 add  def
+    currmonth 12 ge { 
+        /currmonth 1 def  
+        /curryear curryear 1 add def 
+    } if
+} def
+
+/incrDate {
+    /currdate currdate 1 add  def
+    currdate monthlengths currmonth 1 sub get gt
+    { /currdate 1 def incrMonth } if
+} def
+
+
+/Helvetica findfont 14 scalefont setfont
+
+/fineline {0.3 setlinewidth} def 
 /fatline {2.8 setlinewidth} def 
 
 fineline
@@ -50,8 +76,10 @@ xss yss rmoveto
     1 xunit 0 yunit rlineto
     -1 xunit 0 yunit rmoveto
     0 xunit 1 yunit rlineto
-    0.70 xunit -0.1 yunit rmoveto
-    %(30) usdshow
+    0.96 xunit -0.06 yunit rmoveto
+    currdate 2 string cvs 
+    dup stringwidth exch neg exch rmoveto
+    usdshow
 } def
 
 1 1 nrows {
@@ -61,6 +89,7 @@ xss yss rmoveto
         pop   % Discard the for-loop index.
         currentpoint
         basicstep
+        incrDate
         moveto
         1 xunit 0 yunit rmoveto
         %0.25 xunit 0.1 yunit rmoveto
