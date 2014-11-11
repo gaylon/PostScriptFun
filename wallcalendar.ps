@@ -4,6 +4,12 @@
 %%CreationDate: 04 May 2014
 %%EndComments
 
+0.1234
+(Top of file.  Print stack: \n) print flush
+stack
+(Done stack. \n) print flush
+
+
 % Define the date-month-year for this page to begin
 /currdate     2  def
 /currmonth    6  def
@@ -35,9 +41,75 @@
 /monthnames [(January) (February) (March) (April) (May) (June) 
 (July) (August) (September) (October) (November) (December)]   def 
 /monthlengths [31 28 31 30 31 30 31 31 30 31 30 31] def
+/febNdx 1 def
+
+/leapadjust {
+    % Decides if curryear is leapyear. Sets monthlengths[1] accordingly. 
+    % Call this at program start, and at Jan 1st. 
+    % if year is not divisible by 4 then common year   (Wikipedia says) 
+    % else if year is not divisible by 100 then leap year
+    % else if year is not divisible by 400 then common year
+    % else leap year
+    curryear 4 mod 0 ne  { monthlengths febNdx 28 put } 
+    {
+        % div by 4
+        curryear 100 mod 0 ne  { monthlengths febNdx 29 put } 
+        {
+            % div by 4  && div by 100
+            curryear 400 mod 0 ne  { monthlengths febNdx 28 put } 
+            {
+                % div by 4  &&  div by 100  &&  div by 400
+                monthlengths febNdx 29 put 
+            } ifelse
+        } ifelse
+    } ifelse
+} def
+
+/printMonthName {
+    % Print "MonthName YYYY" vertically in the left-margin area. 
+    % Vertically center the string around the y-position aligned 
+    % to the bottom of the box containing date 15 of that month. 
+    % This function will be called at the start of the page 
+    % (before starting to draw the upper-left-most day-box), and 
+    % again at the start of each subsequent month (before starting 
+    % to draw the day-box for the first of the month).  
+    % The trick is that the string will often be split across pages, 
+    % and we want the two parts of the string to align perfectly 
+    % when the two pages are attached together. 
+    currentpoint  % save this, so can return here when done 
+    % currentpoint xss 0.9 mul exch moveto pop % move straight left into margin 
+    % currdate 1 eq { 0 2 yunit rmoveto }
+    % {
+    %     % else: we're just starting page, at (xss, yunit)
+    %     0  % keep x-posn at xss, as-is 
+    %     15 currdate sub ncols div floor  rmoveto
+    % } ifelse
+    % % Now we're at point where we want text's baseline centered. 
+    % % Start by creating string "MonthName YYYY"
+    %monthnames currmonth length dup dup 5 add string
+    %exch 
+
+    %0 monthnames currmonth putinterval
+    %/Helvetica-Bold findfont 16 scalefont setfont
+    (BigLongString) stringwidth
+    rotate 90
+    2 div neg 0 rmoveto
+    (BigLongString) usdshow
+
+    %rotate -180
+    %/Helvetica findfont 14 scalefont setfont
+
+
+    % Return to saved position
+    moveto 
+} def 
+%        % current column # still on stack
+%    exch xunit div % calc current column #, from curr x-position 
+% exch 
 
 /incrMonth {
     /currmonth currmonth 1 add  def
+    % printMonthName
     currmonth 12 ge { 
         /currmonth 1 def  
         /curryear curryear 1 add def 
@@ -82,6 +154,17 @@ xss yss rmoveto
     usdshow
 } def
 
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+% "Main" program execution 
+
+1.2345
+(Starting Main.  Print stack: \n) print flush
+stack
+(Done stack. \n) print flush
+
+leapadjust
+%printMonthName
+
 1 1 nrows {
     pop   % Discard the for-loop index.
     currentpoint
@@ -117,6 +200,12 @@ moveto
 %currentpoint pop yee lineto 
 %fineline
 stroke
+
+
+9.8765
+(Done Main.  Did stroke.  Print stack: \n) print flush
+stack
+(Done stack. \n) print flush
 
 
 showpage
