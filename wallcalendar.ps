@@ -11,9 +11,9 @@ stack
 
 
 % Define the date-month-year for this page to begin
-/currdate     2  def
-/currmonth    6  def
-/curryear  2014  def
+/currdate    17  def
+/currmonth   11  def
+/curryear  2015  def
 
 % Number of weeks per page
 /nrows {12} def
@@ -43,83 +43,136 @@ stack
 /monthlengths [31 28 31 30 31 30 31 31 30 31 30 31] def
 /febNdx 1 def
 
+
+/concatstrings % (a) (b) -> (ab)  
+{   
+  exch dup length                   % b, a, len(a) 
+  2 index length                    % b, a, len(a), len(b)
+  add string                        % b, a, ab=string(len(a)+len(b))
+  dup dup                           % b, a, ab, ref-ab, ref-ab 
+  4 2 roll                          % b, ref-ab, ref-ab, a, ab 
+  copy                              % b, ref-ab=a, ref-ab=a, ab=a 
+  length                            % b, ref-ab, ref-ab, len(a) 
+  4 -1 roll                         % ref-ab, ref-ab, len(a), b 
+  putinterval                       % ref-ab, ref-ab, 
+} bind def  
+
+
 /leapadjust {
-    % Decides if curryear is leapyear. Sets monthlengths[1] accordingly. 
-    % Call this at program start, and at Jan 1st. 
-    % if year is not divisible by 4 then common year   (Wikipedia says) 
-    % else if year is not divisible by 100 then leap year
-    % else if year is not divisible by 400 then common year
-    % else leap year
-    curryear 4 mod 0 ne  { monthlengths febNdx 28 put } 
+  % Decides if curryear is leapyear. Sets monthlengths[1] accordingly. 
+  % Call this at program start, and at Jan 1st. 
+  % if year is not divisible by 4 then common year   (Wikipedia says) 
+  % else if year is not divisible by 100 then leap year
+  % else if year is not divisible by 400 then common year
+  % else leap year
+  curryear 4 mod 0 ne  { monthlengths febNdx 28 put } 
+  {
+    % div by 4
+    curryear 100 mod 0 ne  { monthlengths febNdx 29 put } 
     {
-        % div by 4
-        curryear 100 mod 0 ne  { monthlengths febNdx 29 put } 
-        {
-            % div by 4  && div by 100
-            curryear 400 mod 0 ne  { monthlengths febNdx 28 put } 
-            {
-                % div by 4  &&  div by 100  &&  div by 400
-                monthlengths febNdx 29 put 
-            } ifelse
-        } ifelse
+      % div by 4  && div by 100
+      curryear 400 mod 0 ne  { monthlengths febNdx 28 put } 
+      {
+          % div by 4  &&  div by 100  &&  div by 400
+          monthlengths febNdx 29 put 
+      } ifelse
     } ifelse
+  } ifelse
 } def
 
-/printMonthName {
-    % Print "MonthName YYYY" vertically in the left-margin area. 
-    % Vertically center the string around the y-position aligned 
-    % to the bottom of the box containing date 15 of that month. 
-    % This function will be called at the start of the page 
-    % (before starting to draw the upper-left-most day-box), and 
-    % again at the start of each subsequent month (before starting 
-    % to draw the day-box for the first of the month).  
-    % The trick is that the string will often be split across pages, 
-    % and we want the two parts of the string to align perfectly 
-    % when the two pages are attached together. 
-    currentpoint  % save this, so can return here when done 
-    % currentpoint xss 0.9 mul exch moveto pop % move straight left into margin 
-    % currdate 1 eq { 0 2 yunit rmoveto }
-    % {
-    %     % else: we're just starting page, at (xss, yunit)
-    %     0  % keep x-posn at xss, as-is 
-    %     15 currdate sub ncols div floor  rmoveto
-    % } ifelse
-    % % Now we're at point where we want text's baseline centered. 
-    % % Start by creating string "MonthName YYYY"
-    %monthnames currmonth length dup dup 5 add string
-    %exch 
+/printMonthName { 
+  % Print "MonthName YYYY" vertically in the left-margin area. 
+  % Vertically center the string around the y-position 2.5 rows 
+  % below the top of the box containing the first of the month. 
+  % This function will be called at the start of the page 
+  % (before starting to draw the upper-left-most day-box), and 
+  % again at the start of each subsequent month (before starting 
+  % to draw the day-box for the first of the month).  
+  % The trick is that the string will often be split across pages, 
+  % and we want the two parts of the string to align perfectly 
+  % when the two pages are attached together. 
 
-    %0 monthnames currmonth putinterval
-    %/Helvetica-Bold findfont 16 scalefont setfont
-    (BigLongString) stringwidth
-    rotate 90
-    2 div neg 0 rmoveto
-    (BigLongString) usdshow
-
-    %rotate -180
-    %/Helvetica findfont 14 scalefont setfont
+  % (Entering printMonthName.  Print stack: \n) print flush
+  % stack
+  % (Done stack. \n) print flush
 
 
-    % Return to saved position
-    moveto 
+  currentpoint  % save this, so can return here when done 
+
+
+
+  currentpoint xss 0.9 mul exch moveto pop % move straight left into margin 
+  currdate 1 ne 
+  {
+    % else: we're just starting page, at (xss, yss)
+    0  % keep x-posn at xss, as-is 
+    currdate 1 sub ncols div ceiling neg yunit  rmoveto
+  } if
+
+  % Center the text 2.5 rows below the beginning of the month
+  0 2.5 yunit rmoveto 
+
+  currentfont
+
+  % Now we're at point where we want text's baseline centered. 
+  % Start by creating string "MonthName YYYY"
+  %monthnames currmonth get 
+  monthnames currmonth 1 sub get ( ) concatstrings curryear 4 string cvs concatstrings
+  % monthnames currmonth get dup   % --> ref-mName, ref-mName 
+  % length dup 5 add               % --> ref-mName, len(mName), len(mName)+5
+  % string exch                    % --> ref-mName, string(len(mName)+5), len(mName)
+  % 3 1 roll                       % --> len(mName), ref-mName, string(len(mName)+5)
+  % copy                           % --> len(mName), ref-mName, string=mName...
+  %   
+  %                                % --> string=mName..., len(mName), (2014) 
+  % putinterval                    % --> 
+  
+  
+  %exch 
+  
+  -90 rotate
+  
+  /Helvetica-Bold findfont 16 scalefont setfont
+  dup stringwidth   pop  % discard Wy
+  2 div neg 0 rmoveto
+
+  usdshow
+  
+  90 rotate
+
+  setfont
+
+
+  (About to moveto and return from printMonthName.  Print stack: \n) print flush
+  stack
+  (Done stack. \n) print flush
+
+
+  % Return to saved position
+  moveto 
 } def 
 %        % current column # still on stack
 %    exch xunit div % calc current column #, from curr x-position 
 % exch 
 
+
 /incrMonth {
-    /currmonth currmonth 1 add  def
-    % printMonthName
-    currmonth 12 ge { 
-        /currmonth 1 def  
-        /curryear curryear 1 add def 
-    } if
+  /currdate 1 def 
+
+  /currmonth currmonth 1 add  def
+  currmonth 12 gt { 
+    /currmonth 1 def  
+    /curryear curryear 1 add def 
+    % % % FIXME!!!! % % %   leapadjust 
+  } if
+
+  printMonthName
 } def
 
 /incrDate {
-    /currdate currdate 1 add  def
-    currdate monthlengths currmonth 1 sub get gt
-    { /currdate 1 def incrMonth } if
+  /currdate currdate 1 add  def
+  currdate monthlengths currmonth 1 sub get gt
+  { incrMonth } if
 } def
 
 
@@ -145,13 +198,15 @@ xss yss rmoveto
 % the right side, to close those edges.
 
 /basicstep {
-    1 xunit 0 yunit rlineto
-    -1 xunit 0 yunit rmoveto
-    0 xunit 1 yunit rlineto
-    0.96 xunit -0.06 yunit rmoveto
-    currdate 2 string cvs 
-    dup stringwidth exch neg exch rmoveto
-    usdshow
+  1 xunit 0 yunit rlineto
+  -1 xunit 0 yunit rmoveto
+  0 xunit 1 yunit rlineto
+  0.96 xunit -0.06 yunit rmoveto
+  currdate 2 string cvs
+  dup stringwidth 
+  % Move -Wx by +Wy.  UpSideDown-ness of usdshow does equiv of negating Wy. 
+  exch neg exch rmoveto
+  usdshow
 } def
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
@@ -163,22 +218,27 @@ stack
 (Done stack. \n) print flush
 
 leapadjust
-%printMonthName
+printMonthName
 
 1 1 nrows {
+  pop   % Discard the for-loop index.
+  currentpoint
+  1 1 ncols {
     pop   % Discard the for-loop index.
+
+    % Store currentpoint, before calling basicstep, then move back, after. 
+    % So basicstep can leave currentpoint just anywhere. 
     currentpoint
-    1 1 ncols {
-        pop   % Discard the for-loop index.
-        currentpoint
-        basicstep
-        incrDate
-        moveto
-        1 xunit 0 yunit rmoveto
-        %0.25 xunit 0.1 yunit rmoveto
-    } for
+    basicstep
     moveto
-    0 xunit 1 yunit rmoveto
+    % Stack still has x,y of start of this week/row (from outer loop).
+
+    incrDate
+    1 xunit 0 yunit rmoveto
+    %0.25 xunit 0.1 yunit rmoveto
+  } for
+  moveto  % "Carriage return' to start of this week/row (from outer loop).
+  0 xunit 1 yunit rmoveto
 } for
 
 xss yee moveto
