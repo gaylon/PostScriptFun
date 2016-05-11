@@ -6,7 +6,12 @@ This repo includes a few PostScript 'programs' I've written...
 You can 'execute' them by just opening them with GhostView, or 
 just dumping them to a PostScript printer.
 
-Here's two which produce a pages of "graph paper", 
+wallcalendar.ps  prints pages which can be taped together 
+to form an infinite continuous calendar.  I like this format, 
+for hanging on my cubicle wall, because it eliminates the 
+artificial discontinuity between months. 
+
+Then there's two which produce a pages of "graph paper", 
 except that instead of a square grid, you get either triangles 
 or hexagons.  I wrote these years ago, to do my homework in 
 a grad class on cellular communications systems. 
